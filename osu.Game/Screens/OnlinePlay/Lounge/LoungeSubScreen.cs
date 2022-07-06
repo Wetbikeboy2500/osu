@@ -358,6 +358,38 @@ namespace osu.Game.Screens.OnlinePlay.Lounge
             api.Queue(req);
         }
 
+        [Resolved(CanBeNull = true)]
+        private Collections.CollectionManager collectionManager { get; set; }
+
+        public void CopyAsCollection(Room room)
+        {
+            Debug.Assert(room.RoomID.Value != null);
+
+            var req = new GetRoomRequest(room.RoomID.Value.Value);
+
+            req.Success += (Room r) =>
+            {
+                //Extract all the beatmap hashes from the playlist
+                IEnumerable<String> hashes = r.Playlist.Select(item => item.Beatmap.MD5Hash);
+                //Create a new collection with the same name as the room
+                Collections.BeatmapCollection collection = new Collections.BeatmapCollection
+                {
+                    Name = { Value = r.Name.Value }
+                };
+                //Add the room hashes to the collection hashes
+                collection.BeatmapHashes.AddRange(hashes);
+                //Add the collection itself
+                collectionManager?.Collections.Add(collection);
+            };
+
+            req.Failure += exception =>
+            {
+                Logger.Error(exception, "Couldn't create a copy of this room as a collection.");
+            };
+
+            api.Queue(req);
+        }
+
         /// <summary>
         /// Push a room as a new subscreen.
         /// </summary>

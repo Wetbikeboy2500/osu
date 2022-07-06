@@ -132,6 +132,10 @@ namespace osu.Game.Screens.OnlinePlay.Lounge
             new OsuMenuItem("Create copy", MenuItemType.Standard, () =>
             {
                 lounge?.OpenCopy(Room);
+            }),
+            new OsuMenuItem("Copy as collection", MenuItemType.Standard, () =>
+            {
+                lounge?.CopyAsCollection(Room);
             })
         };
 
