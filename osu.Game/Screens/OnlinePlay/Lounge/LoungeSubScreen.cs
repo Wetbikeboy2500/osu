@@ -25,6 +25,8 @@ using osu.Game.Input;
 using osu.Game.Online.API;
 using osu.Game.Online.Rooms;
 using osu.Game.Overlays;
+using osu.Game.Overlays.Notifications;
+using osu.Game.Collections;
 using osu.Game.Rulesets;
 using osu.Game.Screens.OnlinePlay.Components;
 using osu.Game.Screens.OnlinePlay.Lounge.Components;
@@ -358,8 +360,11 @@ namespace osu.Game.Screens.OnlinePlay.Lounge
             api.Queue(req);
         }
 
+        [Resolved]
+        private INotificationOverlay notifications { get; set; }
+
         [Resolved(CanBeNull = true)]
-        private Collections.CollectionManager collectionManager { get; set; }
+        private CollectionManager collectionManager { get; set; }
 
         public void CopyAsCollection(Room room)
         {
@@ -371,15 +376,19 @@ namespace osu.Game.Screens.OnlinePlay.Lounge
             {
                 //Extract all the beatmap hashes from the playlist
                 IEnumerable<String> hashes = r.Playlist.Select(item => item.Beatmap.MD5Hash);
+                //name of the collection
+                String name = r.Name.Value;
                 //Create a new collection with the same name as the room
-                Collections.BeatmapCollection collection = new Collections.BeatmapCollection
+                BeatmapCollection collection = new BeatmapCollection
                 {
-                    Name = { Value = r.Name.Value }
+                    Name = { Value = name }
                 };
                 //Add the room hashes to the collection hashes
                 collection.BeatmapHashes.AddRange(hashes);
                 //Add the collection itself
                 collectionManager?.Collections.Add(collection);
+                //Notify the user that the collection was created
+                notifications.Post(new SimpleNotification { Text = $"Collection {name} created!" });
             };
 
             req.Failure += exception =>
